@@ -6,17 +6,16 @@
     <title>Phoenix Riser — $PHNX</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; overflow: hidden; touch-action: manipulation; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a14; color: #fff; min-height: 100vh; overflow: hidden; touch-action: manipulation; }
         canvas { display: block; }
         .hud { position: fixed; top: 12px; left: 12px; z-index: 10; pointer-events: none; }
         .hud-row { display: flex; gap: 8px; margin-bottom: 6px; }
-        .hud-item { background: rgba(0,0,0,0.75); padding: 6px 12px; border-radius: 8px; font-size: 13px; backdrop-filter: blur(4px); }
+        .hud-item { background: rgba(0,0,0,0.75); padding: 6px 12px; border-radius: 8px; font-size: 12px; backdrop-filter: blur(4px); }
         .hud-val { font-weight: 700; }
         .hud-val.hi { color: #ff8c42; }
         .hud-val.feather { color: #ffd700; }
         .hud-val.combo { color: #00ff88; }
         .hud-val.biome { color: #c0c0c0; }
-        .hud-val.prestige { color: #a855f7; }
         .biome-banner { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 28px; font-weight: 700; color: #ffd700; text-shadow: 0 0 20px rgba(255,215,0,0.5); opacity: 0; transition: opacity 0.5s; z-index: 20; pointer-events: none; text-align: center; }
         .biome-banner.show { opacity: 1; }
         .shop { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 10; flex-wrap: wrap; justify-content: center; max-width: 95vw; }
@@ -24,9 +23,8 @@
         .shop-btn:hover, .shop-btn:active { border-color: #ff8c42; color: #ff8c42; }
         .shop-btn:disabled { opacity: 0.35; pointer-events: none; }
         .shop-btn .cost { color: #ffd700; }
-        .prestige-btn { border-color: #a855f7; color: #a855f7; }
-        .combo-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.5); font-size: 56px; font-weight: 800; color: #ffd700; opacity: 0; z-index: 25; pointer-events: none; text-shadow: 0 0 30px rgba(255,215,0,0.6); transition: none; }
-        .game-over { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .combo-pop { position: fixed; top: 45%; left: 50%; transform: translate(-50%,-50%) scale(0.5); font-size: 52px; font-weight: 800; color: #ffd700; opacity: 0; z-index: 25; pointer-events: none; text-shadow: 0 0 30px rgba(255,215,0,0.6); transition: none; }
+        .game-over { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; }
         .game-over.show { display: flex; }
         .game-over h2 { font-size: 28px; color: #ff8c42; margin-bottom: 8px; }
         .game-over .final { font-size: 52px; font-weight: 800; color: #ffd700; }
@@ -45,22 +43,17 @@
 <div class="hud">
     <div class="hud-row">
         <div class="hud-item">⬆ <span class="hud-val hi" id="hHeight">0</span>m</div>
-        <div class="hud-item">⚡ <span class="hud-val" id="hPower">1.0</span></div>
-    </div>
-    <div class="hud-row">
         <div class="hud-item">🪶 <span class="hud-val feather" id="hFeathers">0</span></div>
-        <div class="hud-item">🔥 <span class="hud-val combo" id="hCombo">x0</span></div>
     </div>
     <div class="hud-row">
+        <div class="hud-item">🔥 <span class="hud-val combo" id="hCombo">x0</span></div>
         <div class="hud-item">🌍 <span class="hud-val biome" id="hBiome">Ground</span></div>
-        <div class="hud-item">♻ <span class="hud-val prestige" id="hPrestige">x1.0</span></div>
     </div>
 </div>
 
 <div class="stock-bar">
     <div class="stock-tag"><span class="n">NVDA</span> <span class="p">$142</span></div>
     <div class="stock-tag"><span class="n">TSLA</span> <span class="p">$248</span></div>
-    <div class="stock-tag"><span class="n">AAPL</span> <span class="p">$195</span></div>
 </div>
 
 <div class="biome-banner" id="biomeBanner"></div>
@@ -71,101 +64,83 @@
     <button class="shop-btn" onclick="buy('lightning')">⚡ Zap <span class="cost" id="costLightning">25</span></button>
     <button class="shop-btn" onclick="buy('magnet')">🧲 Magnet <span class="cost" id="costMagnet">40</span></button>
     <button class="shop-btn" onclick="buy('shield')">🛡 Shield <span class="cost" id="costShield">60</span></button>
-    <button class="shop-btn prestige-btn" onclick="prestige()" id="btnPrestige">♻ Prestige</button>
 </div>
 
 <div class="game-over" id="go">
     <h2>🔥 Phoenix Down</h2>
     <div class="final" id="goHeight">0</div>
     <div class="sub">meters · <span id="goBiome">Ground</span></div>
-    <div class="sub">Best: <span id="goBest">0</span>m · Feathers kept: <span id="goKept">0</span></div>
+    <div class="sub">Best: <span id="goBest">0</span>m</div>
     <button class="btn" onclick="restart()">🔥 Rise Again</button>
     <button class="btn btn-tw" onclick="share()">📤 Share</button>
 </div>
 
 <script>
-// ── Canvas ──
 const cv = document.getElementById('c');
 const cx = cv.getContext('2d');
 let W, H;
 function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; }
 resize(); addEventListener('resize', resize);
 
-// ── Persistent state ──
-const LS = 'phnx_v2';
-let save = JSON.parse(localStorage.getItem(LS) || '{}');
-let bestHeight = save.best || 0;
-let totalFeathers = save.feathers || 0;
-let prestigeMult = save.prestige || 1;
-let upgrades = save.upgrades || { wings: 0, lightning: 0, magnet: 0, shield: 0 };
-
-// ── Biomes ──
 const BIOMES = [
-    { name: 'Ground', color: '#2d1b0e', sky: '#1a0a00', threshold: 0, obstacles: 0.01, obsColor: '#553322' },
+    { name: 'Ground', color: '#2d1b0e', sky: '#1a0a00', threshold: 0, obstacles: 0.012, obsColor: '#553322' },
     { name: 'Troposphere', color: '#0d1b2a', sky: '#0a1520', threshold: 500, obstacles: 0.018, obsColor: '#335577' },
     { name: 'Storm Layer', color: '#1a0a2e', sky: '#0d0520', threshold: 2000, obstacles: 0.025, obsColor: '#6644aa' },
     { name: 'Stratosphere', color: '#0a1a3a', sky: '#051020', threshold: 5000, obstacles: 0.02, obsColor: '#4488cc' },
     { name: 'Space', color: '#000008', sky: '#000002', threshold: 10000, obstacles: 0.015, obsColor: '#888' }
 ];
 
-// ── Game state ──
+const LS = 'phnx_v3';
+let save = JSON.parse(localStorage.getItem(LS)||'{}');
+let bestHeight = save.best || 0;
+let totalFeathers = save.feathers || 0;
+let upgrades = save.upgrades || { wings: 0, lightning: 0, magnet: 0, shield: 0 };
+
 let phoenix, height, runFeathers, combo, maxCombo, comboTimer, gameActive;
 let obstacles, featherDrops, particles, stars;
-let shakeMag, shakeDecay;
-let currentBiome, lastBiomeIdx;
-let frameCount;
+let shakeMag, currentBiome, lastBiomeIdx, frameCount;
 
-const COMBO_WINDOW = 40; // frames of forgiveness (~667ms at 60fps)
+const COMBO_WINDOW = 40;
 const GRAVITY = 0.35;
 const BASE_TAP = -11;
 
 function power() { return 1 + upgrades.wings * 0.3 + upgrades.lightning * 0.6; }
 function magnetRange() { return upgrades.magnet * 50; }
 function shieldHP() { return upgrades.shield; }
-function prestigeReq() { return Math.floor(1000 * Math.pow(2, prestigeMult - 1)); }
 
 function upgradeCost(type) {
     const base = { wings: 10, lightning: 25, magnet: 40, shield: 60 };
     return Math.floor(base[type] * Math.pow(1.6, upgrades[type]));
 }
 
-// ── Init ──
 function init() {
-    phoenix = { x: W / 2, y: H - 120, vy: 0, size: 22, shield: shieldHP(), squash: 1 };
+    phoenix = { x: W/2, y: H-120, vy: 0, size: 22, shield: shieldHP(), squash: 1 };
     height = 0; runFeathers = 0; combo = 0; maxCombo = 0; comboTimer = 0;
-    obstacles = []; featherDrops = []; particles = []; stars = [];
-    shakeMag = 0; shakeDecay = 0.9;
-    currentBiome = BIOMES[0]; lastBiomeIdx = 0;
-    frameCount = 0;
+    obstacles = []; featherDrops = []; particles = [];
+    shakeMag = 0; currentBiome = BIOMES[0]; lastBiomeIdx = 0; frameCount = 0;
     gameActive = true;
     document.getElementById('go').classList.remove('show');
-    for (let i = 0; i < 80; i++) stars.push({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 1.5 + 0.5 });
+    for(let i=0;i<80;i++) stars.push({x:Math.random()*W,y:Math.random()*H,s:Math.random()*1.5+0.5});
+    stars = stars || [];
+    if(!stars.length) for(let i=0;i<80;i++) stars.push({x:Math.random()*W,y:Math.random()*H,s:Math.random()*1.5+0.5});
 }
+stars = [];
+for(let i=0;i<80;i++) stars.push({x:Math.random()*W,y:Math.random()*H,s:Math.random()*1.5+0.5});
 
-// ── Tap ──
 function tap() {
-    if (!gameActive) return;
+    if(!gameActive) return;
     phoenix.vy = BASE_TAP - power() * 1.2;
     phoenix.squash = 0.7;
     combo++;
     comboTimer = COMBO_WINDOW;
-    if (combo > maxCombo) maxCombo = combo;
-    if (combo > 1 && combo % 5 === 0) showCombo(combo);
-    // fire particles
-    for (let i = 0; i < 6; i++) {
-        particles.push({
-            x: phoenix.x, y: phoenix.y + 10,
-            vx: (Math.random() - 0.5) * 5, vy: Math.random() * -3 - 1,
-            life: 20 + Math.random() * 15,
-            hue: 10 + Math.random() * 40
-        });
-    }
+    if(combo > maxCombo) maxCombo = combo;
+    if(combo > 1 && combo % 5 === 0) showCombo(combo);
+    for(let i=0;i<6;i++) particles.push({x:phoenix.x,y:phoenix.y+10,vx:(Math.random()-0.5)*5,vy:Math.random()*-3-1,life:20+Math.random()*15,hue:10+Math.random()*40});
 }
 
-// ── Buy ──
 function buy(type) {
     const cost = upgradeCost(type);
-    if (totalFeathers >= cost) {
+    if(totalFeathers >= cost) {
         totalFeathers -= cost;
         upgrades[type]++;
         saveGame();
@@ -173,53 +148,31 @@ function buy(type) {
     }
 }
 
-function prestige() {
-    if (height < prestigeReq()) return;
-    prestigeMult += 0.25;
-    totalFeathers += Math.floor(height / 10);
-    saveGame();
-    showBiomeBanner('♻ Prestige x' + prestigeMult.toFixed(2));
-    init();
-}
-
 function updateShop() {
     document.getElementById('costWings').textContent = upgradeCost('wings');
     document.getElementById('costLightning').textContent = upgradeCost('lightning');
     document.getElementById('costMagnet').textContent = upgradeCost('magnet');
     document.getElementById('costShield').textContent = upgradeCost('shield');
-    const btn = document.getElementById('btnPrestige');
-    btn.textContent = '♻ Prestige (' + prestigeReq() + 'm)';
-    btn.disabled = height < prestigeReq();
 }
 
-// ── HUD ──
 function updateHUD() {
     document.getElementById('hHeight').textContent = Math.floor(height);
-    document.getElementById('hPower').textContent = power().toFixed(1);
     document.getElementById('hFeathers').textContent = totalFeathers + runFeathers;
     document.getElementById('hCombo').textContent = 'x' + combo;
     document.getElementById('hBiome').textContent = currentBiome.name;
-    document.getElementById('hPrestige').textContent = 'x' + prestigeMult.toFixed(2);
 }
 
-// ── Biome transition ──
 function checkBiome() {
     let idx = 0;
-    for (let i = BIOMES.length - 1; i >= 0; i--) {
-        if (height >= BIOMES[i].threshold) { idx = i; break; }
-    }
-    if (idx !== lastBiomeIdx) {
+    for(let i=BIOMES.length-1;i>=0;i--) { if(height>=BIOMES[i].threshold) { idx=i; break; } }
+    if(idx !== lastBiomeIdx) {
         lastBiomeIdx = idx;
         currentBiome = BIOMES[idx];
-        showBiomeBanner(currentBiome.name);
+        const el = document.getElementById('biomeBanner');
+        el.textContent = currentBiome.name;
+        el.classList.add('show');
+        setTimeout(() => el.classList.remove('show'), 2000);
     }
-}
-
-function showBiomeBanner(text) {
-    const el = document.getElementById('biomeBanner');
-    el.textContent = text;
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 2000);
 }
 
 function showCombo(n) {
@@ -230,233 +183,167 @@ function showCombo(n) {
     setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translate(-50%,-50%) scale(0.5)'; }, 500);
 }
 
-// ── Shake ──
 function shake(mag) { shakeMag = Math.max(shakeMag, mag); }
 
-// ── Update ──
 function update() {
-    if (!gameActive) return;
+    if(!gameActive) return;
     frameCount++;
-
-    // combo decay
-    if (comboTimer > 0) comboTimer--;
+    
+    if(comboTimer > 0) comboTimer--;
     else combo = 0;
-
-    // phoenix physics
+    
     phoenix.vy += GRAVITY;
     phoenix.y += phoenix.vy;
     phoenix.squash += (1 - phoenix.squash) * 0.15;
-
-    // height
-    if (phoenix.vy < 0) height += (-phoenix.vy) * prestigeMult * 0.3;
-
-    // floor / ceiling
-    if (phoenix.y > H + 50) {
-        if (phoenix.shield > 0) {
+    
+    if(phoenix.vy < 0) height += (-phoenix.vy) * 0.3;
+    
+    if(phoenix.y > H + 50) {
+        if(phoenix.shield > 0) {
             phoenix.shield--;
             phoenix.vy = -14;
             phoenix.y = H - 50;
             shake(8);
-        } else {
-            endGame();
-        }
+        } else { endGame(); }
     }
-    if (phoenix.y < -50) { phoenix.y = -50; phoenix.vy = 0; }
-
-    // obstacles
-    if (Math.random() < currentBiome.obstacles) {
-        obstacles.push({
-            x: Math.random() * W, y: -40,
-            size: 14 + Math.random() * 20,
-            speed: 2 + Math.random() * 2 + height * 0.0002,
-            color: currentBiome.obsColor
-        });
+    if(phoenix.y < -50) { phoenix.y = -50; phoenix.vy = 0; }
+    
+    if(Math.random() < currentBiome.obstacles) {
+        obstacles.push({x:Math.random()*W,y:-40,size:14+Math.random()*20,speed:2+Math.random()*2+height*0.0002,color:currentBiome.obsColor});
     }
     obstacles = obstacles.filter(o => {
         o.y += o.speed;
-        const dx = phoenix.x - o.x, dy = phoenix.y - o.y;
-        if (Math.sqrt(dx * dx + dy * dy) < phoenix.size + o.size) {
-            if (phoenix.shield > 0) {
-                phoenix.shield--;
-                shake(6);
-                spawnBurst(o.x, o.y, '#ff4444', 12);
-                return false;
-            } else {
-                endGame();
-            }
+        const dx=phoenix.x-o.x, dy=phoenix.y-o.y;
+        if(Math.sqrt(dx*dx+dy*dy) < phoenix.size+o.size) {
+            if(phoenix.shield > 0) { phoenix.shield--; shake(6); spawnBurst(o.x,o.y,'#ff4444',12); return false; }
+            else endGame();
         }
-        return o.y < H + 50;
+        return o.y < H+50;
     });
-
-    // feather drops
-    if (Math.random() < 0.015) {
-        featherDrops.push({ x: Math.random() * W, y: -20, size: 10, speed: 1.5 + Math.random() });
-    }
+    
+    if(Math.random() < 0.015) featherDrops.push({x:Math.random()*W,y:-20,size:10,speed:1.5+Math.random()});
     const mr = magnetRange();
     featherDrops = featherDrops.filter(f => {
         f.y += f.speed;
-        // magnet pull
-        if (mr > 0) {
-            const dx = phoenix.x - f.x, dy = phoenix.y - f.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < mr) {
-                f.x += dx / dist * 3;
-                f.y += dy / dist * 3;
-            }
-        }
-        const dx = phoenix.x - f.x, dy = phoenix.y - f.y;
-        if (Math.sqrt(dx * dx + dy * dy) < phoenix.size + f.size) {
-            runFeathers += 1 + Math.floor(combo * 0.1);
-            spawnBurst(f.x, f.y, '#ffd700', 6);
-            return false;
-        }
-        return f.y < H + 30;
+        if(mr > 0) { const dx=phoenix.x-f.x,dy=phoenix.y-f.y,dist=Math.sqrt(dx*dx+dy*dy); if(dist<mr){f.x+=dx/dist*3;f.y+=dy/dist*3;} }
+        const dx=phoenix.x-f.x,dy=phoenix.y-f.y;
+        if(Math.sqrt(dx*dx+dy*dy) < phoenix.size+f.size) { runFeathers+=1+Math.floor(combo*0.1); spawnBurst(f.x,f.y,'#ffd700',6); return false; }
+        return f.y < H+30;
     });
-
-    // particles
-    particles = particles.filter(p => {
-        p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.life--;
-        return p.life > 0;
-    });
-
-    // shake decay
-    shakeMag *= shakeDecay;
-    if (shakeMag < 0.5) shakeMag = 0;
-
+    
+    particles = particles.filter(p => { p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life--; return p.life>0; });
+    
+    shakeMag *= 0.9;
+    if(shakeMag < 0.5) shakeMag = 0;
+    
     checkBiome();
     updateHUD();
     updateShop();
 }
 
-function spawnBurst(x, y, color, n) {
-    for (let i = 0; i < n; i++) {
-        particles.push({
-            x, y,
-            vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6,
-            life: 15 + Math.random() * 10, hue: 0, color
-        });
-    }
+function spawnBurst(x,y,color,n) {
+    for(let i=0;i<n;i++) particles.push({x,y,vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6,life:15+Math.random()*10,hue:0,color});
 }
 
-// ── Draw ──
 function draw() {
     cx.save();
-    if (shakeMag > 0) cx.translate((Math.random() - 0.5) * shakeMag, (Math.random() - 0.5) * shakeMag);
-
-    // sky gradient
-    const grad = cx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, currentBiome.sky);
-    grad.addColorStop(1, currentBiome.color);
+    if(shakeMag > 0) cx.translate((Math.random()-0.5)*shakeMag,(Math.random()-0.5)*shakeMag);
+    
+    const grad = cx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,currentBiome.sky);
+    grad.addColorStop(1,currentBiome.color);
     cx.fillStyle = grad;
-    cx.fillRect(0, 0, W, H);
-
-    // stars (subtle parallax)
+    cx.fillRect(0,0,W,H);
+    
     cx.fillStyle = 'rgba(255,255,255,0.3)';
-    stars.forEach(s => {
-        const py = ((s.y + height * 0.05) % H + H) % H;
-        cx.beginPath(); cx.arc(s.x, py, s.s, 0, Math.PI * 2); cx.fill();
-    });
-
-    // obstacles
-    obstacles.forEach(o => {
-        cx.fillStyle = o.color;
-        cx.beginPath(); cx.arc(o.x, o.y, o.size, 0, Math.PI * 2); cx.fill();
-    });
-
-    // feathers
-    featherDrops.forEach(f => {
-        cx.fillStyle = '#ffd700';
-        cx.beginPath();
-        cx.moveTo(f.x, f.y - 6);
-        cx.lineTo(f.x - 4, f.y + 4);
-        cx.lineTo(f.x + 4, f.y + 4);
-        cx.closePath(); cx.fill();
-    });
-
-    // phoenix
-    const sx = phoenix.squash, sy = 1 / sx;
+    stars.forEach(s => { const py=((s.y+height*0.05)%H+H)%H; cx.beginPath();cx.arc(s.x,py,s.s,0,Math.PI*2);cx.fill(); });
+    
+    obstacles.forEach(o => { cx.fillStyle=o.color;cx.beginPath();cx.arc(o.x,o.y,o.size,0,Math.PI*2);cx.fill(); });
+    
+    featherDrops.forEach(f => { cx.fillStyle='#ffd700';cx.beginPath();cx.moveTo(f.x,f.y-6);cx.lineTo(f.x-4,f.y+4);cx.lineTo(f.x+4,f.y+4);cx.closePath();cx.fill(); });
+    
+    // Phoenix (Vibe Viber style)
+    const sx=phoenix.squash, sy=1/sx;
     cx.save();
-    cx.translate(phoenix.x, phoenix.y);
-    cx.scale(sx, sy);
-
-    // glow
-    const glow = cx.createRadialGradient(0, 0, 0, 0, 0, phoenix.size * 2);
-    glow.addColorStop(0, 'rgba(255,140,66,0.25)');
-    glow.addColorStop(1, 'rgba(255,140,66,0)');
-    cx.fillStyle = glow;
-    cx.beginPath(); cx.arc(0, 0, phoenix.size * 2, 0, Math.PI * 2); cx.fill();
-
-    // body
-    cx.fillStyle = '#ff8c42';
-    cx.beginPath(); cx.arc(0, 0, phoenix.size, 0, Math.PI * 2); cx.fill();
-    cx.fillStyle = '#ffd700';
-    cx.beginPath(); cx.arc(0, -4, phoenix.size * 0.5, 0, Math.PI * 2); cx.fill();
-
-    // eyes
-    cx.fillStyle = '#fff';
-    cx.beginPath(); cx.arc(-7, -7, 4, 0, Math.PI * 2); cx.arc(7, -7, 4, 0, Math.PI * 2); cx.fill();
-    cx.fillStyle = '#0a0a0a';
-    cx.beginPath(); cx.arc(-6, -7, 2, 0, Math.PI * 2); cx.arc(8, -7, 2, 0, Math.PI * 2); cx.fill();
-
-    // shield ring
-    if (phoenix.shield > 0) {
-        cx.strokeStyle = 'rgba(0,255,136,0.5)';
-        cx.lineWidth = 3;
-        cx.beginPath(); cx.arc(0, 0, phoenix.size + 8, 0, Math.PI * 2); cx.stroke();
+    cx.translate(phoenix.x,phoenix.y);
+    cx.scale(sx,sy);
+    
+    const glow=cx.createRadialGradient(0,0,0,0,0,phoenix.size*2);
+    glow.addColorStop(0,'rgba(255,140,66,0.25)');
+    glow.addColorStop(1,'rgba(255,140,66,0)');
+    cx.fillStyle=glow;
+    cx.beginPath();cx.arc(0,0,phoenix.size*2,0,Math.PI*2);cx.fill();
+    
+    // Body
+    cx.fillStyle='#ff4d1a';
+    cx.fillRect(-phoenix.size,-phoenix.size*0.8,phoenix.size*2,phoenix.size*1.6);
+    
+    // Head
+    cx.fillStyle='#ff4d1a';
+    cx.fillRect(-12,-phoenix.size*0.8-18,24,24);
+    
+    // Eyes (Vibe Viber style)
+    cx.fillStyle='#fff';
+    cx.fillRect(-8,-phoenix.size*0.8-12,6,6);
+    cx.fillRect(2,-phoenix.size*0.8-12,6,6);
+    cx.fillStyle='#0a0a14';
+    cx.fillRect(-6,-phoenix.size*0.8-10,3,3);
+    cx.fillRect(4,-phoenix.size*0.8-10,3,3);
+    
+    // Feather crest
+    cx.fillStyle='#ffd700';
+    cx.fillRect(-2,-phoenix.size*0.8-28,4,10);
+    cx.fillRect(-4,-phoenix.size*0.8-32,8,4);
+    
+    // Legs
+    cx.fillStyle='#cc3d15';
+    cx.fillRect(-8,phoenix.size*0.8-4,6,8);
+    cx.fillRect(2,phoenix.size*0.8-4,6,8);
+    
+    if(phoenix.shield > 0) {
+        cx.strokeStyle='rgba(0,255,136,0.5)';
+        cx.lineWidth=3;
+        cx.beginPath();cx.arc(0,0,phoenix.size+8,0,Math.PI*2);cx.stroke();
     }
-
+    
     cx.restore();
-
-    // particles
+    
     particles.forEach(p => {
-        if (p.color) {
-            cx.fillStyle = p.color;
-        } else {
-            cx.fillStyle = `hsl(${p.hue},100%,${40 + p.life}%)`;
-        }
-        cx.globalAlpha = p.life / 30;
-        cx.beginPath(); cx.arc(p.x, p.y, 2.5, 0, Math.PI * 2); cx.fill();
+        if(p.color) cx.fillStyle=p.color;
+        else cx.fillStyle=`hsl(${p.hue},100%,${40+p.life}%)`;
+        cx.globalAlpha=p.life/30;
+        cx.beginPath();cx.arc(p.x,p.y,2.5,0,Math.PI*2);cx.fill();
     });
-    cx.globalAlpha = 1;
-
+    cx.globalAlpha=1;
+    
     cx.restore();
 }
 
-// ── Game over ──
 function endGame() {
-    gameActive = false;
-    const h = Math.floor(height);
-    const kept = runFeathers;
-    totalFeathers += kept;
-    if (h > bestHeight) bestHeight = h;
+    gameActive=false;
+    const h=Math.floor(height);
+    totalFeathers+=runFeathers;
+    if(h>bestHeight) bestHeight=h;
     saveGame();
-    document.getElementById('goHeight').textContent = h;
-    document.getElementById('goBiome').textContent = currentBiome.name;
-    document.getElementById('goBest').textContent = bestHeight;
-    document.getElementById('goKept').textContent = kept;
+    document.getElementById('goHeight').textContent=h;
+    document.getElementById('goBiome').textContent=currentBiome.name;
+    document.getElementById('goBest').textContent=bestHeight;
     document.getElementById('go').classList.add('show');
 }
 
 function restart() { init(); }
 
 function share() {
-    const text = `🔥 Phoenix Riser — $PHNX\n\nI flew ${Math.floor(height)}m into ${currentBiome.name}!\n\nBest: ${bestHeight}m · Prestige: x${prestigeMult.toFixed(2)}\n\nCan you reach Space? 🚀\n\nPlay: [link]\n@vibevibe_fun`;
+    const text=`🔥 Phoenix Riser — $PHNX\n\nI flew ${Math.floor(height)}m into ${currentBiome.name}!\nBest: ${bestHeight}m\n\nPlay: [link]\n@vibevibe_fun`;
     open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`);
 }
 
-function saveGame() {
-    localStorage.setItem(LS, JSON.stringify({
-        best: bestHeight, feathers: totalFeathers,
-        prestige: prestigeMult, upgrades
-    }));
-}
+function saveGame() { localStorage.setItem(LS,JSON.stringify({best:bestHeight,feathers:totalFeathers,upgrades})); }
 
-// ── Input ──
-addEventListener('pointerdown', (e) => { if (e.target.closest('.shop') || e.target.closest('.game-over')) return; tap(); });
-addEventListener('keydown', e => { if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); tap(); } });
+addEventListener('pointerdown',e=>{if(e.target.closest('.shop')||e.target.closest('.game-over'))return;tap();});
+addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();tap();}});
 
-// ── Loop ──
-function loop() { update(); draw(); requestAnimationFrame(loop); }
+function loop(){update();draw();requestAnimationFrame(loop);}
 init();
 loop();
 </script>

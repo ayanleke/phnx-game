@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phoenix Tracker — Track Your Comeback</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+        }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header {
+            text-align: center;
+            padding: 40px 0 20px;
+        }
+        .logo {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+        h1 {
+            font-size: 28px;
+            background: linear-gradient(135deg, #ff6b35, #ff8c42, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+        }
+        .card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid #2a2a2a;
+        }
+        .card h2 {
+            font-size: 16px;
+            color: #ff8c42;
+            margin-bottom: 16px;
+        }
+        .input-group {
+            margin-bottom: 16px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            outline: none;
+        }
+        .input-group input:focus {
+            border-color: #ff8c42;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff6b35, #ff8c42);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .btn:hover { opacity: 0.9; }
+        .result {
+            display: none;
+            margin-top: 16px;
+        }
+        .result.show { display: block; }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-label { color: #888; font-size: 14px; }
+        .stat-value { font-weight: 600; font-size: 16px; }
+        .stat-value.positive { color: #00ff88; }
+        .stat-value.negative { color: #ff4444; }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #0a0a0a;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b35, #ffd700);
+            border-radius: 10px;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            min-width: 40px;
+        }
+        .stock-section {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 1px solid #0f3460;
+        }
+        .stock-section h2 {
+            color: #ffd700;
+        }
+        .stock-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #1a2744;
+        }
+        .stock-item:last-child { border-bottom: none; }
+        .stock-name { font-size: 14px; }
+        .stock-price { font-size: 14px; color: #00ff88; }
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            color: #555;
+            font-size: 12px;
+        }
+        .footer a {
+            color: #ff8c42;
+            text-decoration: none;
+        }
+        .token-badge {
+            display: inline-block;
+            background: rgba(255, 140, 66, 0.2);
+            border: 1px solid #ff8c42;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            color: #ff8c42;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🔥</div>
+            <h1>Phoenix Tracker</h1>
+            <p class="subtitle">Track your comeback from the ashes</p>
+            <div class="token-badge">Powered by $PHNX</div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Your Comeback Stats</h2>
+            <div class="input-group">
+                <label>What you lost ($)</label>
+                <input type="number" id="lost" placeholder="e.g. 10000" />
+            </div>
+            <div class="input-group">
+                <label>What you've rebuilt ($)</label>
+                <input type="number" id="rebuilt" placeholder="e.g. 3500" />
+            </div>
+            <button class="btn" onclick="calculate()">Calculate My Comeback</button>
+            
+            <div class="result" id="result">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill">0%</div>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Total Lost</span>
+                    <span class="stat-value negative" id="totalLost">$0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Total Rebuilt</span>
+                    <span class="stat-value positive" id="totalRebuilt">$0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Recovery Progress</span>
+                    <span class="stat-value" id="recoveryPct">0%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Still To Go</span>
+                    <span class="stat-value" id="stillToGo">$0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Phoenix Status</span>
+                    <span class="stat-value" id="phoenixStatus">🥚 Egg</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card stock-section">
+            <h2>📈 Phoenix Stock Fund</h2>
+            <p style="color: #888; font-size: 12px; margin-bottom: 12px;">Tokenized stocks powering the Phoenix recovery</p>
+            <div class="stock-item">
+                <span class="stock-name">NVIDIA (NVDA)</span>
+                <span class="stock-price">$142.50</span>
+            </div>
+            <div class="stock-item">
+                <span class="stock-name">Tesla (TSLA)</span>
+                <span class="stock-price">$248.30</span>
+            </div>
+            <div class="stock-item">
+                <span class="stock-name">Apple (AAPL)</span>
+                <span class="stock-price">$195.20</span>
+            </div>
+            <div class="stock-item">
+                <span class="stock-name">Bitcoin ETF (IBIT)</span>
+                <span class="stock-price">$52.15</span>
+            </div>
+            <div class="stock-item">
+                <span class="stock-name">Robinhood (HOOD)</span>
+                <span class="stock-price">$28.90</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            Built for the <a href="https://testnet.vibevibe.fun">vibe/vibe</a> community<br>
+            Phoenix rises. Always. 🔥
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            const lost = parseFloat(document.getElementById('lost').value) || 0;
+            const rebuilt = parseFloat(document.getElementById('rebuilt').value) || 0;
+            
+            if (lost <= 0) return;
+            
+            const pct = Math.min((rebuilt / lost) * 100, 100);
+            const remaining = Math.max(lost - rebuilt, 0);
+            
+            document.getElementById('result').classList.add('show');
+            document.getElementById('totalLost').textContent = '$' + lost.toLocaleString();
+            document.getElementById('totalRebuilt').textContent = '$' + rebuilt.toLocaleString();
+            document.getElementById('recoveryPct').textContent = pct.toFixed(1) + '%';
+            document.getElementById('stillToGo').textContent = '$' + remaining.toLocaleString();
+            
+            const fill = document.getElementById('progressFill');
+            fill.style.width = pct + '%';
+            fill.textContent = pct.toFixed(0) + '%';
+            
+            let status = '🥚 Egg';
+            if (pct >= 100) status = '🦅 Risen!';
+            else if (pct >= 75) status = '🔥 Blazing';
+            else if (pct >= 50) status = '🔥 Rising';
+            else if (pct >= 25) status = '🐣 Hatching';
+            else if (pct > 0) status = '🌱 Sprouting';
+            
+            document.getElementById('phoenixStatus').textContent = status;
+            
+            // Save to localStorage
+            const history = JSON.parse(localStorage.getItem('phnx_history') || '[]');
+            history.push({ date: new Date().toISOString(), lost, rebuilt, pct: pct.toFixed(1) });
+            localStorage.setItem('phnx_history', JSON.stringify(history));
+        }
+    </script>
+</body>
+</html>

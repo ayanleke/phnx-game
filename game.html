@@ -1,352 +1,785 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phoenix Rising — $PHNX</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Phoenix Riser — $PHNX</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: Outfit, sans-serif; background: #0c0a08; color: #e8dcc8; min-height: 100vh; overflow: hidden; touch-action: manipulation; }
-        canvas { display: block; }
-        .hud { position: fixed; top: 12px; left: 12px; z-index: 10; pointer-events: none; }
-        .hud-row { display: flex; gap: 8px; margin-bottom: 6px; }
-        .hud-item { background: rgba(0,0,0,0.75); padding: 6px 12px; border-radius: 8px; font-size: 12px; backdrop-filter: blur(4px); }
-        .hud-val { font-weight: 700; }
-        .hud-val.hi { color: #ff8c42; }
-        .hud-val.feather { color: #ffd700; }
-        .hud-val.combo { color: #00ff88; }
-        .hud-val.biome { color: #c0c0c0; }
-        .biome-banner { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 28px; font-weight: 700; color: #ffd700; text-shadow: 0 0 20px rgba(255,215,0,0.5); opacity: 0; transition: opacity 0.5s; z-index: 20; pointer-events: none; text-align: center; }
-        .biome-banner.show { opacity: 1; }
-        .shop { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 10; flex-wrap: wrap; justify-content: center; max-width: 95vw; }
-        .shop-btn { padding: 8px 12px; background: rgba(0,0,0,0.75); border: 1px solid #333; border-radius: 8px; color: #aaa; font-size: 11px; cursor: pointer; transition: all 0.15s; backdrop-filter: blur(4px); white-space: nowrap; }
-        .shop-btn:hover, .shop-btn:active { border-color: #ff8c42; color: #ff8c42; }
-        .shop-btn:disabled { opacity: 0.35; pointer-events: none; }
-        .shop-btn .cost { color: #ffd700; }
-        .combo-pop { position: fixed; top: 45%; left: 50%; transform: translate(-50%,-50%) scale(0.5); font-size: 52px; font-weight: 800; color: #ffd700; opacity: 0; z-index: 25; pointer-events: none; text-shadow: 0 0 30px rgba(255,215,0,0.6); transition: none; }
-        .game-over { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; }
-        .game-over.show { display: flex; }
-        .game-over h2 { font-size: 28px; color: #ff8c42; margin-bottom: 8px; }
-        .game-over .final { font-size: 52px; font-weight: 800; color: #ffd700; }
-        .game-over .sub { color: #888; font-size: 14px; margin: 8px 0 20px; }
-        .btn { padding: 12px 28px; background: linear-gradient(135deg, #ff6b35, #ff8c42); border: none; border-radius: 10px; color: #e8dcc8; font-size: 16px; font-weight: 700; cursor: pointer; margin: 6px; }
-        .btn:active { transform: scale(0.96); }
-        .btn-tw { background: linear-gradient(135deg, #1da1f2, #0d8ecf); }
-        .stock-bar { position: fixed; top: 12px; right: 12px; z-index: 10; pointer-events: none; }
-        .stock-tag { background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; font-size: 10px; margin-bottom: 3px; text-align: right; }
-        .stock-tag .n { color: #666; } .stock-tag .p { color: #00ff88; }
-    </style>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Outfit', sans-serif;
+        background: #0c0a08;
+        color: #f5f0e6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 14px;
+    }
+    h1 {
+        font-family: 'Cinzel', serif;
+        font-size: clamp(22px, 5vw, 34px);
+        color: #ff6b35;
+        letter-spacing: 2px;
+        margin: 6px 0 2px;
+    }
+    .subtitle { color: #8a7a5c; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+    .stage {
+        position: relative;
+        width: min(560px, 100%);
+        aspect-ratio: 9 / 14;
+        border: 1px solid #2a2318;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #16130f;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    #game { display: block; width: 100%; height: 100%; touch-action: none; }
+    .hud {
+        position: absolute; top: 8px; left: 10px; right: 10px;
+        display: flex; justify-content: space-between; align-items: flex-start;
+        pointer-events: none; gap: 8px;
+    }
+    .chip {
+        background: rgba(12,10,8,0.6); border: 1px solid rgba(255,107,53,0.35);
+        border-radius: 10px; padding: 6px 12px;
+    }
+    .chip .lbl { font-size: 9px; letter-spacing: 1.5px; color: #8a7a5c; text-transform: uppercase; }
+    .chip .val { font-size: 16px; font-weight: 700; color: #ffd76a; }
+    .rebirth-chip .val { color: #ff6b35; }
+    .relic-row {
+        position: absolute; top: 62px; left: 10px; right: 10px;
+        display: flex; flex-wrap: wrap; gap: 5px; pointer-events: none;
+    }
+    .relic-pill {
+        background: rgba(12,10,8,0.72); border: 1px solid rgba(212,160,23,0.5);
+        border-radius: 999px; padding: 3px 9px; font-size: 11px; color: #ffd76a;
+        display: flex; align-items: center; gap: 4px;
+    }
+    .relic-pill .cnt { color: #f5f0e6; font-weight: 700; font-size: 10px; }
+    .dive-btn {
+        position: absolute; right: 12px; bottom: 14px; z-index: 4;
+        width: 92px; height: 92px; border-radius: 50%;
+        border: 2px solid rgba(255,107,53,0.65);
+        background: radial-gradient(circle at 35% 30%, rgba(255,107,53,0.92), rgba(140,40,10,0.92));
+        color: #fff3e0; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 11px;
+        letter-spacing: 1px; cursor: pointer; overflow: hidden;
+        box-shadow: 0 6px 20px rgba(255,107,53,0.45);
+        touch-action: none; user-select: none; -webkit-user-select: none;
+    }
+    .dive-btn:active { transform: scale(0.93); }
+    .dive-btn .cool {
+        position: absolute; left: 0; bottom: 0; width: 100%;
+        background: rgba(12,10,8,0.72); pointer-events: none;
+    }
+    .dive-btn .cd-txt {
+        position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+        font-size: 20px; color: #ffd76a; pointer-events: none;
+    }
+    .dive-btn.ready { animation: diveGlow 1.6s ease-in-out infinite alternate; }
+    @keyframes diveGlow {
+        from { box-shadow: 0 4px 14px rgba(255,107,53,0.35); }
+        to   { box-shadow: 0 4px 26px rgba(255,107,53,0.85); }
+    }
+    .overlay {
+        position: absolute; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; text-align: center;
+        background: rgba(12,10,8,0.85); z-index: 5; padding: 20px;
+    }
+    .overlay.hidden { display: none; }
+    .overlay h2 { font-family: 'Cinzel', serif; font-size: clamp(22px, 6vw, 34px); color: #ff6b35; margin-bottom: 8px; }
+    .overlay p { color: #b8a988; font-size: 14px; max-width: 380px; line-height: 1.6; margin-bottom: 18px; }
+    .big-btn {
+        background: linear-gradient(135deg, #ff6b35, #ffb066); color: #0c0a08;
+        border: none; border-radius: 999px; padding: 14px 32px; font-size: 16px;
+        font-weight: 800; letter-spacing: 1.5px; cursor: pointer; font-family: 'Outfit', sans-serif;
+        box-shadow: 0 6px 22px rgba(255,107,53,0.4);
+    }
+    .big-btn:active { transform: scale(0.95); }
+    .share-btn {
+        margin-top: 12px; background: #16130f; border: 1px solid #2a2318; color: #f5f0e6;
+        border-radius: 999px; padding: 10px 22px; font-size: 13px; cursor: pointer; text-decoration: none;
+    }
+    .reignite {
+        position: absolute; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; text-align: center; z-index: 6;
+        background: rgba(255,107,53,0.12); cursor: pointer;
+    }
+    .reignite.hidden { display: none; }
+    .reignite .big { font-family: 'Cinzel', serif; font-size: clamp(24px, 7vw, 42px); color: #ffd76a; text-shadow: 0 0 24px rgba(255,107,53,0.8); animation: pulse 0.7s ease-in-out infinite alternate; }
+    .reignite .small { color: #f5f0e6; font-size: 13px; letter-spacing: 3px; margin-top: 8px; }
+    @keyframes pulse { from { transform: scale(1); opacity: 0.85; } to { transform: scale(1.08); opacity: 1; } }
+    .relic-overlay {
+        position: absolute; inset: 0; z-index: 7;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: rgba(12,10,8,0.9); padding: 18px; text-align: center;
+    }
+    .relic-overlay.hidden { display: none; }
+    .relic-overlay h2 { font-family: 'Cinzel', serif; font-size: clamp(20px, 5.5vw, 30px); color: #ffd76a; margin-bottom: 4px; }
+    .relic-overlay .sub { color: #8a7a5c; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; }
+    .relic-cards { display: flex; gap: 12px; width: 100%; max-width: 420px; }
+    .relic-card {
+        flex: 1; background: linear-gradient(160deg, #1c1610, #241b12);
+        border: 1px solid rgba(212,160,23,0.55); border-radius: 14px;
+        padding: 18px 12px; cursor: pointer; color: #f5f0e6;
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .relic-card:hover { transform: translateY(-4px); box-shadow: 0 10px 26px rgba(212,160,23,0.3); }
+    .relic-card:active { transform: scale(0.96); }
+    .relic-card .ico { font-size: 34px; margin-bottom: 8px; }
+    .relic-card .nm { font-family: 'Cinzel', serif; font-size: 15px; color: #ffd76a; margin-bottom: 6px; }
+    .relic-card .ds { font-size: 11.5px; color: #b8a988; line-height: 1.55; }
+    .relic-card .own { margin-top: 8px; font-size: 10px; letter-spacing: 1px; color: #d4a017; text-transform: uppercase; }
+    .hint { color: #6b5c42; font-size: 11px; margin-top: 10px; text-align: center; letter-spacing: 0.5px; max-width: 560px; }
+    footer { margin-top: 14px; color: #6b5c42; font-size: 11px; text-align: center; line-height: 1.8; }
+    footer a { color: #d4a017; text-decoration: none; }
+</style>
 </head>
 <body>
-<canvas id="c"></canvas>
+    <h1>🔥 PHOENIX RISING</h1>
+    <div class="subtitle">$PHNX · Rise From The Ashes</div>
 
-<div class="hud">
-    <div class="hud-row">
-        <div class="hud-item">⬆ <span class="hud-val hi" id="hHeight">0</span>m</div>
-        <div class="hud-item">🪶 <span class="hud-val feather" id="hFeathers">0</span></div>
+    <div class="stage" id="stage">
+        <canvas id="game"></canvas>
+        <div class="hud">
+            <div class="chip">
+                <div class="lbl">Altitude</div>
+                <div class="val" id="altVal">0m</div>
+            </div>
+            <div class="chip rebirth-chip">
+                <div class="lbl">Rebirth</div>
+                <div class="val" id="rebirthVal">×1</div>
+            </div>
+            <div class="chip">
+                <div class="lbl">Embers</div>
+                <div class="val" id="emberVal">0</div>
+            </div>
+        </div>
+        <div class="relic-row" id="relicRow"></div>
+        <button class="dive-btn" id="diveBtn">
+            BLAZING<br>DIVE
+            <div class="cool" id="diveCool" style="height:0%"></div>
+            <div class="cd-txt" id="diveCdTxt" style="display:none"></div>
+        </button>
+        <div class="reignite hidden" id="reignite">
+            <div class="big">TAP TO REIGNITE</div>
+            <div class="small" id="reigniteTimer">2.2s</div>
+        </div>
+        <div class="relic-overlay hidden" id="relicOverlay">
+            <h2>RELIC AWAKENS</h2>
+            <div class="sub">Every 400m the ashes offer a gift</div>
+            <div class="relic-cards" id="relicCards"></div>
+        </div>
+        <div class="overlay" id="overlay">
+            <h2 id="ovTitle">PHOENIX RISING</h2>
+            <p id="ovText">Climb through the ash storm into the golden sky. Hitting debris won't end the run — it ignites you. <b>Tap before the fire dies</b> and rise again, stronger each time. Every <b>400m</b> a relic offers power — and <b>Blazing Dive</b> (key E) burns a path through the debris.</p>
+            <button class="big-btn" id="ovBtn">BEGIN THE ASCENT</button>
+            <a class="share-btn" id="ovShare" style="display:none" target="_blank">Share on X</a>
+        </div>
     </div>
-    <div class="hud-row">
-        <div class="hud-item">🔥 <span class="hud-val combo" id="hCombo">x0</span></div>
-        <div class="hud-item">🌍 <span class="hud-val biome" id="hBiome">Ground</span></div>
-    </div>
-</div>
 
-<div class="stock-bar">
-    <div class="stock-tag"><span class="n">NVDA</span> <span class="p">$142</span></div>
-    <div class="stock-tag"><span class="n">TSLA</span> <span class="p">$248</span></div>
-</div>
+    <div class="hint">Hold / tap to fly up · drag or arrows to steer · space works too · E = Blazing Dive · every rebirth multiplies your score</div>
 
-<div class="biome-banner" id="biomeBanner"></div>
-<div class="combo-pop" id="comboPop"></div>
-
-<div class="shop" id="shop">
-    <button class="shop-btn" onclick="buy('wings')">🔥 Wings <span class="cost" id="costWings">10</span></button>
-    <button class="shop-btn" onclick="buy('lightning')">⚡ Zap <span class="cost" id="costLightning">25</span></button>
-    <button class="shop-btn" onclick="buy('magnet')">🧲 Magnet <span class="cost" id="costMagnet">40</span></button>
-    <button class="shop-btn" onclick="buy('shield')">🛡 Shield <span class="cost" id="costShield">60</span></button>
-</div>
-
-<div class="game-over" id="go">
-    <h2>🔥 Phoenix Down</h2>
-    <div class="final" id="goHeight">0</div>
-    <div class="sub">meters · <span id="goBiome">Ground</span></div>
-    <div class="sub">Best: <span id="goBest">0</span>m</div>
-    <button class="btn" onclick="restart()">🔥 Rise Again</button>
-    <button class="btn btn-tw" onclick="share()">📤 Share</button>
-</div>
+    <footer>
+        Built for the <a href="https://testnet.vibevibe.fun">vibe/vibe</a> community<br>
+        From the ashes, every single time. 🔥
+    </footer>
 
 <script>
-const cv = document.getElementById('c');
-const cx = cv.getContext('2d');
-let W, H;
-function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; }
-resize(); addEventListener('resize', resize);
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    let W = 480, H = 740;
 
-const BIOMES = [
-    { name: 'Ground', color: '#2d1b0e', sky: '#1a0a00', threshold: 0, obstacles: 0.012, obsColor: '#553322' },
-    { name: 'Troposphere', color: '#0d1b2a', sky: '#0a1520', threshold: 500, obstacles: 0.018, obsColor: '#335577' },
-    { name: 'Storm Layer', color: '#1a0a2e', sky: '#0d0520', threshold: 2000, obstacles: 0.025, obsColor: '#6644aa' },
-    { name: 'Stratosphere', color: '#0a1a3a', sky: '#051020', threshold: 5000, obstacles: 0.02, obsColor: '#4488cc' },
-    { name: 'Space', color: '#000008', sky: '#000002', threshold: 10000, obstacles: 0.015, obsColor: '#888' }
-];
-
-const LS = 'phnx_v3';
-let save = JSON.parse(localStorage.getItem(LS)||'{}');
-let bestHeight = save.best || 0;
-let totalFeathers = save.feathers || 0;
-let upgrades = save.upgrades || { wings: 0, lightning: 0, magnet: 0, shield: 0 };
-
-let phoenix, height, runFeathers, combo, maxCombo, comboTimer, gameActive;
-let obstacles, featherDrops, particles, stars;
-let shakeMag, currentBiome, lastBiomeIdx, frameCount;
-
-const COMBO_WINDOW = 40;
-const GRAVITY = 0.35;
-const BASE_TAP = -11;
-
-function power() { return 1 + upgrades.wings * 0.3 + upgrades.lightning * 0.6; }
-function magnetRange() { return upgrades.magnet * 50; }
-function shieldHP() { return upgrades.shield; }
-
-function upgradeCost(type) {
-    const base = { wings: 10, lightning: 25, magnet: 40, shield: 60 };
-    return Math.floor(base[type] * Math.pow(1.6, upgrades[type]));
-}
-
-function init() {
-    phoenix = { x: W/2, y: H-120, vy: 0, size: 22, shield: shieldHP(), squash: 1 };
-    height = 0; runFeathers = 0; combo = 0; maxCombo = 0; comboTimer = 0;
-    obstacles = []; featherDrops = []; particles = [];
-    shakeMag = 0; currentBiome = BIOMES[0]; lastBiomeIdx = 0; frameCount = 0;
-    gameActive = true;
-    document.getElementById('go').classList.remove('show');
-    for(let i=0;i<80;i++) stars.push({x:Math.random()*W,y:Math.random()*H,s:Math.random()*1.5+0.5});
-    stars = stars || [];
-    if(!stars.length) for(let i=0;i<80;i++) stars.push({x:Math.random()*W,y:Math.random()*H,s:Math.random()*1.5+0.5});
-}
-stars = [];
-for(let i=0;i<80;i++) stars.push({x:Math.random()*W,y:Math.random()*H,s:Math.random()*1.5+0.5});
-
-function tap() {
-    if(!gameActive) return;
-    phoenix.vy = BASE_TAP - power() * 1.2;
-    phoenix.squash = 0.7;
-    combo++;
-    comboTimer = COMBO_WINDOW;
-    if(combo > maxCombo) maxCombo = combo;
-    if(combo > 1 && combo % 5 === 0) showCombo(combo);
-    for(let i=0;i<6;i++) particles.push({x:phoenix.x,y:phoenix.y+10,vx:(Math.random()-0.5)*5,vy:Math.random()*-3-1,life:20+Math.random()*15,hue:10+Math.random()*40});
-}
-
-function buy(type) {
-    const cost = upgradeCost(type);
-    if(totalFeathers >= cost) {
-        totalFeathers -= cost;
-        upgrades[type]++;
-        saveGame();
-        updateShop();
+    function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const rect = canvas.getBoundingClientRect();
+        W = rect.width; H = rect.height;
+        canvas.width = W * dpr; canvas.height = H * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-}
+    window.addEventListener('resize', resize);
 
-function updateShop() {
-    document.getElementById('costWings').textContent = upgradeCost('wings');
-    document.getElementById('costLightning').textContent = upgradeCost('lightning');
-    document.getElementById('costMagnet').textContent = upgradeCost('magnet');
-    document.getElementById('costShield').textContent = upgradeCost('shield');
-}
+    // ---------- state ----------
+    let mode = 'menu'; // menu | play | rebirth | relic | dead
+    let player, rocks = [], embers = [], particles = [], floaters = [];
+    let altitude = 0, embersCaught = 0, multiplier = 1, score = 0;
+    let rebirthTimer = 0, invTimer = 0, spawnRock = 0, spawnEmber = 0;
+    let shake = 0, lastTs = 0, cloudScroll = 0;
+    let highScore = 0, bestRebirths = 0, holding = false;
+    let emberScore = 0, burnScore = 0;
+    let nextRelicAt = 400, relicChoice = [];
+    let diveCd = 0, diveDash = 0, diveBurn = 0;
+    const keys = {};
 
-function updateHUD() {
-    document.getElementById('hHeight').textContent = Math.floor(height);
-    document.getElementById('hFeathers').textContent = totalFeathers + runFeathers;
-    document.getElementById('hCombo').textContent = 'x' + combo;
-    document.getElementById('hBiome').textContent = currentBiome.name;
-}
+    // relic stacks
+    const RELICS = [
+        { id: 'solar',     ico: '☀️', name: 'Solar Feather', desc: '+30% ember value per relic. Stacks.', },
+        { id: 'ward',      ico: '🛡️', name: 'Ash Ward',      desc: 'Survive one extra hit before combustion. Stacks.' },
+        { id: 'storm',     ico: '🌩️', name: 'Stormcall',     desc: 'Debris spawns 25% less often. Stacks.' },
+        { id: 'wind',      ico: '🌬️', name: 'Wind Rune',     desc: '+20% ascent speed per relic. Stacks.' },
+        { id: 'magnet',    ico: '🧲', name: 'Ember Magnet',  desc: 'Embers drift toward you. Stacks widen the pull.' },
+        { id: 'second',    ico: '🕯️', name: 'Second Flame',  desc: 'Rebirth window +1.5s. Stacks.' }
+    ];
+    const relics = { solar: 0, ward: 0, storm: 0, wind: 0, magnet: 0, second: 0 };
 
-function checkBiome() {
-    let idx = 0;
-    for(let i=BIOMES.length-1;i>=0;i--) { if(height>=BIOMES[i].threshold) { idx=i; break; } }
-    if(idx !== lastBiomeIdx) {
-        lastBiomeIdx = idx;
-        currentBiome = BIOMES[idx];
-        const el = document.getElementById('biomeBanner');
-        el.textContent = currentBiome.name;
-        el.classList.add('show');
-        setTimeout(() => el.classList.remove('show'), 2000);
+    try {
+        const saved = JSON.parse(localStorage.getItem('phnx_game_state') || '{}');
+        highScore = saved.highScore || 0;
+        bestRebirths = saved.bestRebirths || 0;
+    } catch (e) {}
+
+    function saveState() {
+        try {
+            localStorage.setItem('phnx_game_state', JSON.stringify({
+                highScore, bestRebirths: Math.max(bestRebirths, multiplier - 1)
+            }));
+        } catch (e) {}
     }
-}
 
-function showCombo(n) {
-    const el = document.getElementById('comboPop');
-    el.textContent = 'x' + n;
-    el.style.opacity = '1';
-    el.style.transform = 'translate(-50%,-50%) scale(1.3)';
-    setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translate(-50%,-50%) scale(0.5)'; }, 500);
-}
-
-function shake(mag) { shakeMag = Math.max(shakeMag, mag); }
-
-function update() {
-    if(!gameActive) return;
-    frameCount++;
-    
-    if(comboTimer > 0) comboTimer--;
-    else combo = 0;
-    
-    phoenix.vy += GRAVITY;
-    phoenix.y += phoenix.vy;
-    phoenix.squash += (1 - phoenix.squash) * 0.15;
-    
-    if(phoenix.vy < 0) height += (-phoenix.vy) * 0.3;
-    
-    if(phoenix.y > H + 50) {
-        if(phoenix.shield > 0) {
-            phoenix.shield--;
-            phoenix.vy = -14;
-            phoenix.y = H - 50;
-            shake(8);
-        } else { endGame(); }
+    // ---------- audio ----------
+    let AC = null;
+    function beep(freq, dur, gain, type) {
+        try {
+            if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+            if (AC.state === 'suspended') AC.resume();
+            const t = AC.currentTime;
+            const o = AC.createOscillator(), g = AC.createGain();
+            o.type = type || 'triangle'; o.frequency.value = freq;
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.linearRampToValueAtTime(gain, t + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            o.connect(g); g.connect(AC.destination);
+            o.start(t); o.stop(t + dur + 0.03);
+        } catch (e) {}
     }
-    if(phoenix.y < -50) { phoenix.y = -50; phoenix.vy = 0; }
-    
-    if(Math.random() < currentBiome.obstacles) {
-        obstacles.push({x:Math.random()*W,y:-40,size:14+Math.random()*20,speed:2+Math.random()*2+height*0.0002,color:currentBiome.obsColor});
-    }
-    obstacles = obstacles.filter(o => {
-        o.y += o.speed;
-        const dx=phoenix.x-o.x, dy=phoenix.y-o.y;
-        if(Math.sqrt(dx*dx+dy*dy) < phoenix.size+o.size) {
-            if(phoenix.shield > 0) { phoenix.shield--; shake(6); spawnBurst(o.x,o.y,'#ff4444',12); return false; }
-            else endGame();
+
+    function burst(x, y, color, n, spread) {
+        for (let i = 0; i < n; i++) {
+            const a = Math.random() * Math.PI * 2, sp = (spread || 3) * (0.3 + Math.random());
+            particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, color, size: 2 + Math.random() * 4 });
         }
-        return o.y < H+50;
-    });
-    
-    if(Math.random() < 0.015) featherDrops.push({x:Math.random()*W,y:-20,size:10,speed:1.5+Math.random()});
-    const mr = magnetRange();
-    featherDrops = featherDrops.filter(f => {
-        f.y += f.speed;
-        if(mr > 0) { const dx=phoenix.x-f.x,dy=phoenix.y-f.y,dist=Math.sqrt(dx*dx+dy*dy); if(dist<mr){f.x+=dx/dist*3;f.y+=dy/dist*3;} }
-        const dx=phoenix.x-f.x,dy=phoenix.y-f.y;
-        if(Math.sqrt(dx*dx+dy*dy) < phoenix.size+f.size) { runFeathers+=1+Math.floor(combo*0.1); spawnBurst(f.x,f.y,'#ffd700',6); return false; }
-        return f.y < H+30;
-    });
-    
-    particles = particles.filter(p => { p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life--; return p.life>0; });
-    
-    shakeMag *= 0.9;
-    if(shakeMag < 0.5) shakeMag = 0;
-    
-    checkBiome();
-    updateHUD();
-    updateShop();
-}
-
-function spawnBurst(x,y,color,n) {
-    for(let i=0;i<n;i++) particles.push({x,y,vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6,life:15+Math.random()*10,hue:0,color});
-}
-
-function draw() {
-    cx.save();
-    if(shakeMag > 0) cx.translate((Math.random()-0.5)*shakeMag,(Math.random()-0.5)*shakeMag);
-    
-    const grad = cx.createLinearGradient(0,0,0,H);
-    grad.addColorStop(0,currentBiome.sky);
-    grad.addColorStop(1,currentBiome.color);
-    cx.fillStyle = grad;
-    cx.fillRect(0,0,W,H);
-    
-    cx.fillStyle = 'rgba(255,255,255,0.3)';
-    stars.forEach(s => { const py=((s.y+height*0.05)%H+H)%H; cx.beginPath();cx.arc(s.x,py,s.s,0,Math.PI*2);cx.fill(); });
-    
-    obstacles.forEach(o => { cx.fillStyle=o.color;cx.beginPath();cx.arc(o.x,o.y,o.size,0,Math.PI*2);cx.fill(); });
-    
-    featherDrops.forEach(f => { cx.fillStyle='#ffd700';cx.beginPath();cx.moveTo(f.x,f.y-6);cx.lineTo(f.x-4,f.y+4);cx.lineTo(f.x+4,f.y+4);cx.closePath();cx.fill(); });
-    
-    // Phoenix (Vibe Viber style)
-    const sx=phoenix.squash, sy=1/sx;
-    cx.save();
-    cx.translate(phoenix.x,phoenix.y);
-    cx.scale(sx,sy);
-    
-    const glow=cx.createRadialGradient(0,0,0,0,0,phoenix.size*2);
-    glow.addColorStop(0,'rgba(255,140,66,0.25)');
-    glow.addColorStop(1,'rgba(255,140,66,0)');
-    cx.fillStyle=glow;
-    cx.beginPath();cx.arc(0,0,phoenix.size*2,0,Math.PI*2);cx.fill();
-    
-    // Body
-    cx.fillStyle='#ff4d1a';
-    cx.fillRect(-phoenix.size,-phoenix.size*0.8,phoenix.size*2,phoenix.size*1.6);
-    
-    // Head
-    cx.fillStyle='#ff4d1a';
-    cx.fillRect(-12,-phoenix.size*0.8-18,24,24);
-    
-    // Eyes (Vibe Viber style)
-    cx.fillStyle='#fff';
-    cx.fillRect(-8,-phoenix.size*0.8-12,6,6);
-    cx.fillRect(2,-phoenix.size*0.8-12,6,6);
-    cx.fillStyle='#0a0a14';
-    cx.fillRect(-6,-phoenix.size*0.8-10,3,3);
-    cx.fillRect(4,-phoenix.size*0.8-10,3,3);
-    
-    // Feather crest
-    cx.fillStyle='#ffd700';
-    cx.fillRect(-2,-phoenix.size*0.8-28,4,10);
-    cx.fillRect(-4,-phoenix.size*0.8-32,8,4);
-    
-    // Legs
-    cx.fillStyle='#cc3d15';
-    cx.fillRect(-8,phoenix.size*0.8-4,6,8);
-    cx.fillRect(2,phoenix.size*0.8-4,6,8);
-    
-    if(phoenix.shield > 0) {
-        cx.strokeStyle='rgba(0,255,136,0.5)';
-        cx.lineWidth=3;
-        cx.beginPath();cx.arc(0,0,phoenix.size+8,0,Math.PI*2);cx.stroke();
     }
-    
-    cx.restore();
-    
-    particles.forEach(p => {
-        if(p.color) cx.fillStyle=p.color;
-        else cx.fillStyle=`hsl(${p.hue},100%,${40+p.life}%)`;
-        cx.globalAlpha=p.life/30;
-        cx.beginPath();cx.arc(p.x,p.y,2.5,0,Math.PI*2);cx.fill();
+
+    function floater(x, y, text, color) {
+        floaters.push({ x, y, text, color, life: 1 });
+    }
+
+    function emberValue() {
+        return Math.round(10 * multiplier * (1 + 0.3 * relics.solar));
+    }
+
+    function rebirthWindow() {
+        return 2.2 + 1.5 * relics.second;
+    }
+
+    // ---------- relics ----------
+    function renderRelicRow() {
+        const row = document.getElementById('relicRow');
+        row.innerHTML = '';
+        for (const r of RELICS) {
+            if (relics[r.id] > 0) {
+                const pill = document.createElement('div');
+                pill.className = 'relic-pill';
+                pill.innerHTML = r.ico + ' <span class="cnt">×' + relics[r.id] + '</span>';
+                pill.title = r.name;
+                row.appendChild(pill);
+            }
+        }
+    }
+
+    function offerRelic() {
+        mode = 'relic';
+        const pool = RELICS.slice();
+        relicChoice = [];
+        while (relicChoice.length < 2 && pool.length) {
+            const i = Math.floor(Math.random() * pool.length);
+            relicChoice.push(pool.splice(i, 1)[0]);
+        }
+        const wrap = document.getElementById('relicCards');
+        wrap.innerHTML = '';
+        for (const r of relicChoice) {
+            const card = document.createElement('button');
+            card.className = 'relic-card';
+            card.innerHTML =
+                '<div class="ico">' + r.ico + '</div>' +
+                '<div class="nm">' + r.name + '</div>' +
+                '<div class="ds">' + r.desc + '</div>' +
+                (relics[r.id] > 0 ? '<div class="own">Owned ×' + relics[r.id] + '</div>' : '');
+            card.addEventListener('click', () => pickRelic(r.id));
+            wrap.appendChild(card);
+        }
+        document.getElementById('relicOverlay').classList.remove('hidden');
+        beep(523, 0.12, 0.07);
+        setTimeout(() => beep(659, 0.15, 0.07), 110);
+    }
+
+    function pickRelic(id) {
+        if (mode !== 'relic') return;
+        relics[id]++;
+        renderRelicRow();
+        document.getElementById('relicOverlay').classList.add('hidden');
+        mode = 'play';
+        nextRelicAt += 400;
+        invTimer = Math.max(invTimer, 1.0);
+        burst(player.x, player.y, '#ffd76a', 18, 3.5);
+        const r = RELICS.find(x => x.id === id);
+        floater(player.x, player.y - 46, r.name.toUpperCase() + ' ×' + relics[id], '#ffd76a');
+        beep(392, 0.12, 0.08);
+        setTimeout(() => beep(587, 0.18, 0.08), 120);
+    }
+
+    // ---------- Blazing Dive ----------
+    function triggerDive() {
+        if (mode !== 'play' || diveCd > 0) return;
+        diveCd = 20;
+        diveDash = 0.33;          // ~200px upward dash
+        diveBurn = 3;             // fire trail burns debris for 3s
+        invTimer = Math.max(invTimer, 0.9);
+        burst(player.x, player.y + 14, '#ff6b35', 16, 4);
+        burst(player.x, player.y, '#ffd76a', 10, 3);
+        floater(player.x, player.y - 34, 'BLAZING DIVE!', '#ffb066');
+        beep(220, 0.18, 0.09, 'sawtooth');
+        setTimeout(() => beep(440, 0.22, 0.09, 'sawtooth'), 90);
+    }
+
+    document.getElementById('diveBtn').addEventListener('pointerdown', e => {
+        e.preventDefault(); e.stopPropagation();
+        triggerDive();
     });
-    cx.globalAlpha=1;
-    
-    cx.restore();
-}
 
-function endGame() {
-    gameActive=false;
-    const h=Math.floor(height);
-    totalFeathers+=runFeathers;
-    if(h>bestHeight) bestHeight=h;
-    saveGame();
-    document.getElementById('goHeight').textContent=h;
-    document.getElementById('goBiome').textContent=currentBiome.name;
-    document.getElementById('goBest').textContent=bestHeight;
-    document.getElementById('go').classList.add('show');
-}
+    // ---------- flow ----------
+    function startGame() {
+        player = { x: W / 2, y: H * 0.62, vy: 0, targetX: 0 };
+        rocks = []; embers = []; particles = []; floaters = [];
+        altitude = 0; embersCaught = 0; multiplier = 1; score = 0;
+        emberScore = 0; burnScore = 0;
+        rebirthTimer = 0; invTimer = 1.2; spawnRock = 1.2; spawnEmber = 0.8;
+        nextRelicAt = 400;
+        diveCd = 0; diveDash = 0; diveBurn = 0;
+        for (const k in relics) relics[k] = 0;
+        renderRelicRow();
+        mode = 'play';
+        document.getElementById('overlay').classList.add('hidden');
+        document.getElementById('reignite').classList.add('hidden');
+        document.getElementById('relicOverlay').classList.add('hidden');
+    }
 
-function restart() { init(); }
+    function combust() {
+        if (relics.ward > 0) {
+            relics.ward--;
+            renderRelicRow();
+            invTimer = 1.3;
+            shake = 9;
+            burst(player.x, player.y, '#d4a017', 18, 4);
+            floater(player.x, player.y - 38, 'ASH WARD ABSORBED', '#d4a017');
+            beep(160, 0.22, 0.09, 'square');
+            return;
+        }
+        mode = 'rebirth';
+        rebirthTimer = rebirthWindow();
+        shake = 16;
+        burst(player.x, player.y, '#ff6b35', 26, 5);
+        burst(player.x, player.y, '#ffd76a', 18, 4);
+        beep(180, 0.35, 0.1, 'sawtooth');
+        document.getElementById('reignite').classList.remove('hidden');
+    }
 
-function share() {
-    const text=`🔥 Phoenix Riser — $PHNX\n\nI flew ${Math.floor(height)}m into ${currentBiome.name}!\nBest: ${bestHeight}m\n\nPlay: [link]\n@vibevibe_fun`;
-    open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`);
-}
+    function reignite() {
+        if (mode !== 'rebirth') return;
+        mode = 'play';
+        multiplier++;
+        invTimer = 2.2;
+        burst(player.x, player.y, '#ffd76a', 22, 4);
+        floater(player.x, player.y - 40, 'REBIRTH ×' + multiplier, '#ffd76a');
+        beep(392, 0.15, 0.09);
+        setTimeout(() => beep(523, 0.2, 0.09), 130);
+        document.getElementById('reignite').classList.add('hidden');
+    }
 
-function saveGame() { localStorage.setItem(LS,JSON.stringify({best:bestHeight,feathers:totalFeathers,upgrades})); }
+    function die() {
+        mode = 'dead';
+        score = Math.floor(altitude * (1 + 0.12 * (multiplier - 1))) + emberScore + burnScore;
+        if (score > highScore) highScore = score;
+        if (multiplier - 1 > bestRebirths) bestRebirths = multiplier - 1;
+        saveState();
+        let relicCount = 0;
+        for (const k in relics) relicCount += relics[k];
+        document.getElementById('ovTitle').textContent = 'FLAMES DIMMED';
+        document.getElementById('ovText').innerHTML =
+            'Altitude: <b>' + Math.floor(altitude) + 'm</b> · Embers: <b>' + embersCaught + '</b> · Rebirths: <b>' + (multiplier - 1) + '</b> · Relics: <b>' + relicCount + '</b><br>Score: <b>' + score + '</b> · Best: <b>' + highScore + '</b>';
+        document.getElementById('ovBtn').textContent = 'RISE AGAIN';
+        const share = document.getElementById('ovShare');
+        share.style.display = 'inline-block';
+        share.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(
+            '🔥 Phoenix Rising ($PHNX) — climbed ' + Math.floor(altitude) + 'm with ' + (multiplier - 1) + ' rebirths, ' + relicCount + ' relics (' + score + ' pts).\n\nFrom the ashes, every time. @vibevibe_fun'
+        );
+        document.getElementById('overlay').classList.remove('hidden');
+        document.getElementById('reignite').classList.add('hidden');
+        document.getElementById('relicOverlay').classList.add('hidden');
+    }
 
-addEventListener('pointerdown',e=>{if(e.target.closest('.shop')||e.target.closest('.game-over'))return;tap();});
-addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();tap();}});
+    document.getElementById('ovBtn').addEventListener('click', startGame);
+    document.getElementById('reignite').addEventListener('pointerdown', e => { e.preventDefault(); reignite(); });
 
-function loop(){update();draw();requestAnimationFrame(loop);}
-init();
-loop();
+    // ---------- input ----------
+    canvas.addEventListener('pointerdown', e => {
+        holding = true;
+        if (mode === 'rebirth') reignite();
+        steerTo(e);
+    });
+    canvas.addEventListener('pointermove', e => { if (holding) steerTo(e); });
+    window.addEventListener('pointerup', () => { holding = false; });
+    function steerTo(e) {
+        const rect = canvas.getBoundingClientRect();
+        player.targetX = (e.clientX - rect.left) * (W / rect.width);
+    }
+    window.addEventListener('keydown', e => {
+        const k = e.key.toLowerCase();
+        keys[k] = true;
+        if (k === ' ' || k === 'arrowup' || k === 'w') { holding = true; e.preventDefault(); if (mode === 'rebirth') reignite(); }
+        if (k === 'e') { e.preventDefault(); triggerDive(); }
+    });
+    window.addEventListener('keyup', e => {
+        const k = e.key.toLowerCase();
+        keys[k] = false;
+        if (k === ' ' || k === 'arrowup' || k === 'w') holding = false;
+    });
+
+    // ---------- update ----------
+    function update(dt) {
+        if (mode === 'rebirth') {
+            rebirthTimer -= dt;
+            document.getElementById('reigniteTimer').textContent = Math.max(0, rebirthTimer).toFixed(1) + 's';
+            if (rebirthTimer <= 0) die();
+            cloudScroll += 20 * dt;
+            for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.life -= 0.03; }
+            particles = particles.filter(p => p.life > 0);
+            shake = Math.max(0, shake - dt * 30);
+            return;
+        }
+        if (mode === 'relic') {
+            // paused for the pick; scene keeps breathing
+            cloudScroll += 12 * dt;
+            for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vy += 0.06; p.life -= 0.02; }
+            particles = particles.filter(p => p.life > 0);
+            shake = Math.max(0, shake - dt * 30);
+            return;
+        }
+        if (mode !== 'play') { cloudScroll += 12 * dt; return; }
+
+        // Blazing Dive timers
+        diveCd = Math.max(0, diveCd - dt);
+        diveDash = Math.max(0, diveDash - dt);
+        diveBurn = Math.max(0, diveBurn - dt);
+
+        // ascent: world scrolls down, altitude grows
+        const speed = Math.min(240, (110 + altitude * 0.02 + (multiplier - 1) * 8) * (1 + 0.2 * relics.wind));
+        altitude += speed * dt * 0.12;
+        cloudScroll += speed * dt;
+
+        // physics: hold = rise, release = sink (floaty)
+        let targetVy = holding ? -170 : 120;
+        if (diveDash > 0) targetVy = -620; // blazing dive: ~200px upward dash
+        player.vy += (targetVy - player.vy) * Math.min(1, dt * (diveDash > 0 ? 14 : 5));
+        player.y += player.vy * dt;
+
+        // steering
+        let steer = 0;
+        if (keys['arrowleft'] || keys['a']) steer -= 1;
+        if (keys['arrowright'] || keys['d']) steer += 1;
+        if (steer) player.x += steer * 210 * dt;
+        else if (player.targetX) player.x += (player.targetX - player.x) * Math.min(1, dt * 6);
+        player.x = Math.max(28, Math.min(W - 28, player.x));
+        player.y = Math.max(60, Math.min(H - 40, player.y));
+
+        invTimer = Math.max(0, invTimer - dt);
+
+        // flame trail (extra-hot during dive)
+        const trailN = diveBurn > 0 ? 3 : 1;
+        for (let i = 0; i < trailN; i++) {
+            if (Math.random() < (diveBurn > 0 ? 0.95 : 0.7)) {
+                particles.push({
+                    x: player.x + (Math.random() - 0.5) * 12, y: player.y + 18,
+                    vx: (Math.random() - 0.5) * 1.4, vy: 1.4 + Math.random() * 1.6,
+                    life: 1, color: Math.random() < 0.5 ? '#ff6b35' : '#ffd76a', size: 2 + Math.random() * 3
+                });
+            }
+        }
+
+        // spawns
+        const stormScale = Math.pow(0.75, relics.storm); // -25% debris per Stormcall
+        spawnRock -= dt * stormScale;
+        if (spawnRock <= 0) {
+            spawnRock = Math.max(0.55, 1.35 - altitude * 0.00022);
+            rocks.push({
+                x: 30 + Math.random() * (W - 60), y: -50,
+                vy: speed * (1.05 + Math.random() * 0.4),
+                drift: (Math.random() - 0.5) * 60,
+                size: 16 + Math.random() * 18,
+                rot: Math.random() * Math.PI * 2,
+                vr: (Math.random() - 0.5) * 2.2
+            });
+        }
+        spawnEmber -= dt;
+        if (spawnEmber <= 0) {
+            spawnEmber = 0.65 + Math.random() * 0.5;
+            embers.push({ x: 30 + Math.random() * (W - 60), y: -30, vy: speed * 0.85, pulse: Math.random() * Math.PI * 2 });
+        }
+
+        for (const r of rocks) {
+            r.y += r.vy * dt;
+            r.x += r.drift * dt * 0.4;
+            r.rot += r.vr * dt;
+        }
+        rocks = rocks.filter(r => r.y < H + 60);
+
+        // Blazing Dive fire trail burns nearby debris
+        if (diveBurn > 0) {
+            const burnR = 130;
+            rocks = rocks.filter(r => {
+                if (Math.hypot(r.x - player.x, r.y - player.y) < burnR + r.size) {
+                    burst(r.x, r.y, '#ff6b35', 10, 3);
+                    burst(r.x, r.y, '#ffd76a', 6, 2.4);
+                    burnScore += Math.round(25 * multiplier);
+                    floater(r.x, r.y, '+' + Math.round(25 * multiplier), '#ffb066');
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        // embers (Ember Magnet pulls them in)
+        for (const em of embers) {
+            em.y += em.vy * dt;
+            em.pulse += dt * 5;
+            if (relics.magnet > 0) {
+                const dx = player.x - em.x, dy = player.y - em.y;
+                const d = Math.hypot(dx, dy);
+                const radius = 130 + 45 * relics.magnet;
+                if (d < radius && d > 1) {
+                    const pull = (150 + 70 * relics.magnet) * (1 - d / radius) + 40;
+                    em.x += (dx / d) * pull * dt;
+                    em.y += (dy / d) * pull * dt;
+                }
+            }
+        }
+
+        // collisions
+        if (invTimer <= 0) {
+            for (let i = 0; i < rocks.length; i++) {
+                const r = rocks[i];
+                if (Math.hypot(r.x - player.x, r.y - player.y) < r.size + 16) {
+                    rocks.splice(i, 1);
+                    combust();
+                    return;
+                }
+            }
+        }
+        for (const em of embers) {
+            if (!em.taken && Math.hypot(em.x - player.x, em.y - player.y) < 30) {
+                em.taken = true;
+                embersCaught++;
+                const v = emberValue();
+                emberScore += v;
+                burst(em.x, em.y, '#ffd76a', 8, 2.2);
+                floater(em.x, em.y, '+' + v, '#ffd76a');
+                beep(660 + Math.min(400, embersCaught * 6), 0.06, 0.045);
+            }
+        }
+        embers = embers.filter(em => em.y < H + 40 && !em.taken);
+
+        // relic pick every 400m
+        if (altitude >= nextRelicAt) {
+            offerRelic();
+            return;
+        }
+
+        // particles / floaters
+        for (const p of particles) { p.x += p.vx; p.y += p.vy + 0.4; p.life -= 0.028; }
+        particles = particles.filter(p => p.life > 0);
+        for (const f of floaters) { f.y -= 0.9; f.life -= 0.018; }
+        floaters = floaters.filter(f => f.life > 0);
+
+        shake = Math.max(0, shake - dt * 30);
+    }
+
+    // ---------- draw ----------
+    function biome() {
+        return altitude < 600 ? 0 : (altitude < 1500 ? 1 : 2);
+    }
+
+    function draw() {
+        ctx.save();
+        if (shake > 0) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+
+        const b = biome();
+        const sky = ctx.createLinearGradient(0, 0, 0, H);
+        if (b === 0) { sky.addColorStop(0, '#1a1210'); sky.addColorStop(1, '#3a2018'); }
+        else if (b === 1) { sky.addColorStop(0, '#2b1b28'); sky.addColorStop(1, '#7a3320'); }
+        else { sky.addColorStop(0, '#3b2050'); sky.addColorStop(1, '#c9603a'); }
+        ctx.fillStyle = sky;
+        ctx.fillRect(-10, -10, W + 20, H + 20);
+
+        // scrolling haze bands
+        for (let i = 0; i < 5; i++) {
+            const y = ((cloudScroll * 0.25 + i * 170) % (H + 200)) - 100;
+            ctx.fillStyle = 'rgba(255,180,120,' + (0.04 + i * 0.012) + ')';
+            ctx.beginPath();
+            ctx.ellipse(W / 2 + Math.sin(i * 2.2) * W * 0.3, y, W * 0.55, 46, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // ash particles falling
+        ctx.fillStyle = 'rgba(255,220,180,0.18)';
+        for (let i = 0; i < 22; i++) {
+            const x = (i * 97.3) % W;
+            const y = ((cloudScroll * (0.6 + (i % 4) * 0.18) + i * 131) % (H + 30)) - 15;
+            ctx.fillRect(x, y, 2.5, 2.5);
+        }
+
+        // embers
+        for (const em of embers) {
+            const r = 7 + Math.sin(em.pulse) * 2;
+            const g = ctx.createRadialGradient(em.x, em.y, 1, em.x, em.y, r * 3);
+            g.addColorStop(0, 'rgba(255,215,120,0.95)'); g.addColorStop(1, 'rgba(255,160,80,0)');
+            ctx.fillStyle = g;
+            ctx.beginPath(); ctx.arc(em.x, em.y, r * 3, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffd76a';
+            ctx.beginPath(); ctx.arc(em.x, em.y, r * 0.55, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // rocks (ash debris)
+        for (const r of rocks) {
+            ctx.save();
+            ctx.translate(r.x, r.y);
+            ctx.rotate(r.rot);
+            ctx.fillStyle = '#241b16';
+            ctx.strokeStyle = '#4a3428';
+            ctx.lineWidth = 2.5;
+            ctx.fillRect(-r.size / 2, -r.size / 2, r.size, r.size);
+            ctx.strokeRect(-r.size / 2, -r.size / 2, r.size, r.size);
+            ctx.restore();
+        }
+
+        // particles
+        for (const p of particles) {
+            ctx.globalAlpha = Math.max(0, p.life);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+        }
+        ctx.globalAlpha = 1;
+
+        // phoenix
+        if (mode === 'play' || mode === 'relic') {
+            const flicker = invTimer > 0 && diveDash <= 0 && Math.floor(Date.now() / 90) % 2 === 0;
+            if (!flicker) drawPhoenix(player.x, player.y, player.vy);
+            if (diveBurn > 0) {
+                // fire-trail aura while debris burns
+                const ag = ctx.createRadialGradient(player.x, player.y, 10, player.x, player.y, 90);
+                ag.addColorStop(0, 'rgba(255,107,53,0.32)');
+                ag.addColorStop(1, 'rgba(255,107,53,0)');
+                ctx.fillStyle = ag;
+                ctx.beginPath(); ctx.arc(player.x, player.y, 90, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+
+        // floaters
+        for (const f of floaters) {
+            ctx.globalAlpha = Math.max(0, f.life);
+            ctx.fillStyle = f.color;
+            ctx.font = '700 15px Outfit, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(f.text, f.x, f.y);
+        }
+        ctx.globalAlpha = 1;
+
+        // vignette
+        const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.75);
+        vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(8,6,4,0.5)');
+        ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+
+        ctx.restore();
+    }
+
+    function drawPhoenix(x, y, vy) {
+        const tilt = Math.max(-0.35, Math.min(0.35, (vy || 0) / 500));
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(tilt);
+        // wings
+        const flap = Math.sin(Date.now() / 120) * 10;
+        ctx.fillStyle = '#c94a1e';
+        ctx.beginPath();
+        ctx.moveTo(-10, -4); ctx.lineTo(-32, -14 - flap * 0.5); ctx.lineTo(-12, 8); ctx.closePath(); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(10, -4); ctx.lineTo(32, -14 - flap * 0.5); ctx.lineTo(12, 8); ctx.closePath(); ctx.fill();
+        // body (voxel cube)
+        ctx.fillStyle = '#ff6b35';
+        ctx.strokeStyle = '#ffd76a';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.roundRect(-15, -16, 30, 32, 8);
+        ctx.fill(); ctx.stroke();
+        // eyes (white blocks)
+        ctx.fillStyle = '#f5f0e6';
+        ctx.fillRect(-9, -8, 7, 7);
+        ctx.fillRect(2, -8, 7, 7);
+        ctx.fillStyle = '#0c0a08';
+        ctx.fillRect(-6, -5, 3.5, 3.5);
+        ctx.fillRect(5, -5, 3.5, 3.5);
+        ctx.restore();
+    }
+
+    // ---------- HUD ----------
+    let hudTick = 0;
+    function updateHUD() {
+        document.getElementById('altVal').textContent = Math.floor(altitude) + 'm';
+        document.getElementById('rebirthVal').textContent = '×' + multiplier;
+        document.getElementById('emberVal').textContent = embersCaught;
+        // Blazing Dive cooldown button
+        const btn = document.getElementById('diveBtn');
+        const cool = document.getElementById('diveCool');
+        const cdTxt = document.getElementById('diveCdTxt');
+        if (diveCd > 0) {
+            btn.classList.remove('ready');
+            cool.style.height = (diveCd / 20 * 100) + '%';
+            cdTxt.style.display = 'flex';
+            cdTxt.textContent = diveCd.toFixed(1);
+        } else {
+            btn.classList.add('ready');
+            cool.style.height = '0%';
+            cdTxt.style.display = 'none';
+        }
+    }
+
+    // ---------- loop ----------
+    function loop(ts) {
+        requestAnimationFrame(loop);
+        const dt = lastTs ? Math.min(0.05, (ts - lastTs) / 1000) : 0.016;
+        lastTs = ts;
+        update(dt);
+        hudTick += dt;
+        if (hudTick > 0.12) { hudTick = 0; updateHUD(); }
+        draw();
+    }
+
+    // debug/test hook (harmless in production)
+    window.__phnx = {
+        get state() {
+            return {
+                mode, altitude, multiplier, embersCaught,
+                relics: Object.assign({}, relics),
+                diveCd, diveBurn, nextRelicAt,
+                rocks: rocks ? rocks.length : 0
+            };
+        },
+        startGame, combust, reignite, triggerDive, offerRelic, pickRelic, die
+    };
+
+    resize();
+    updateHUD();
+    requestAnimationFrame(loop);
 </script>
 </body>
 </html>
